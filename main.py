@@ -1,43 +1,30 @@
-# main.py
-
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-# 👩‍💻 Sample dummy data for now
-# Pretend this is code + whether it's buggy (1 = buggy, 0 = clean)
-data = {
-    "code": [
-        "for i in range(10): print(i)",               # clean
-        "if x = 5 print('hello')",                    # buggy
-        "def add(x, y): return x + y",               # clean
-        "while True print('loop')",                  # buggy
-        "print('hello world')",                      # clean
-        "if (x == 5) { console.log('yes'); }",       # clean
-        "if x == 5 print('yes')",                    # buggy
-        "def divide(a, b): return a / b",            # clean
-        "def bad_func() print('oops')",              # buggy
-        "for i in range(10) print(i)",               # buggy
-    ],
-    "is_bug": [0, 1, 0, 1, 0, 0, 1, 0, 1, 1]
-}
+# Load dataset
+df = pd.read_csv("dataset.csv")
 
+# Combine buggy and clean code into one column
+df_combined = pd.DataFrame({
+    "code": df["buggy_code"].tolist() + df["clean_code"].tolist(),
+    "is_bug": [1] * len(df) + [0] * len(df)
+})
 
-df = pd.DataFrame(data)
-
-# Step 2: Convert code into numbers
+# Vectorize the code
 vectorizer = TfidfVectorizer()
-X = vectorizer.fit_transform(df['code'])
-y = df['is_bug']
+X = vectorizer.fit_transform(df_combined["code"])
+y = df_combined["is_bug"]
 
-# Step 3: Train a basic model
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# Split into train and test
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
 model = LogisticRegression()
 model.fit(X_train, y_train)
 
-# Step 4: Make predictions
-preds = model.predict(X_test)
-print("Predictions:", preds)
-print(classification_report(y_test, preds))
+# Predict and report
+y_pred = model.predict(X_test)
+print(classification_report(y_test, y_pred))
